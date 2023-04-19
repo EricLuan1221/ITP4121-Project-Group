@@ -18,8 +18,8 @@ resource "kubernetes_secret" "aws_secret" {
   }
 
   data = {
-    username = "andrew"
-    password = "aws@@"
+    username = "eric"
+    password = "gcp@@"
   }
 
   type = "kubernetes.io/basic-auth"
