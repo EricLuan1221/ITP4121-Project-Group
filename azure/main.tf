@@ -7,7 +7,13 @@ terraform {
       version = "~> 3.0.2"
     }
   }
-     }
+  cloud {
+    organization = "peterliu201047"
+    workspaces {
+      name = "learn-terraform-azure"
+    }
+  }
+}
 
 resource "azurerm_resource_group" "resource-aks" {
   name     = "resource-aks"
@@ -31,17 +37,31 @@ resource "azurerm_virtual_network" "myterraformnetwork" {
   resource_group_name = azurerm_resource_group.rg.name
 }
 
-resource "azurerm_subnet" "snet" {
-  for_each = var.subnets
-  resource_group_name = azurerm_resource_group.rg.name
+# Create subnet
+resource "azurerm_subnet" "myterraformsubnet" {
+  name                 = "Subnet1"
+  resource_group_name  = azurerm_resource_group.rg.name
   virtual_network_name = azurerm_virtual_network.myterraformnetwork.name
-  name = each.value["name"]
-  address_prefixes = each.value["address_prefixes"]
+  address_prefixes     = ["10.0.1.0/24"]
+}
+
+resource "azurerm_subnet" "myterraformsubnet2" {
+  name                 = "Subnet2"
+  resource_group_name  = azurerm_resource_group.rg.name
+  virtual_network_name = azurerm_virtual_network.myterraformnetwork.name
+  address_prefixes     = ["10.0.2.0/24"]
 }
 
 # Create public IPs
 resource "azurerm_public_ip" "myterraformpublicip" {
   name                = "myPublicIP"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
+  allocation_method   = "Dynamic"
+}
+
+resource "azurerm_public_ip" "myterraformpublicip2" {
+  name                = "myPublicIP2"
   location            = azurerm_resource_group.rg.location
   resource_group_name = azurerm_resource_group.rg.name
   allocation_method   = "Dynamic"
@@ -87,15 +107,25 @@ resource "azurerm_network_security_group" "myterraformnsg" {
   }
 }
 
+# Create network interface
+resource "azurerm_network_interface" "myterraformnic" {
+  name                = "myNIC"
+  location            = azurerm_resource_group.rg.location
+  resource_group_name = azurerm_resource_group.rg.name
 
-# Connect the security group to the network interface
-resource "azurerm_subnet_network_security_group_association" "example" {
-  for_each                  = var.subnets
-  subnet_id                 = azurerm_subnet.snet[each.key].id
-  network_security_group_id = azurerm_network_security_group.myterraformnsg.id
+  ip_configuration {
+    name                          = "myNicConfiguration"
+    subnet_id                     = azurerm_subnet.myterraformsubnet.id
+    private_ip_address_allocation = "Dynamic"
+    public_ip_address_id          = azurerm_public_ip.myterraformpublicip2.id
+  }
 }
 
-
+# Connect the security group to the network interface
+resource "azurerm_network_interface_security_group_association" "example" {
+  network_interface_id      = azurerm_network_interface.myterraformnic.id
+  network_security_group_id = azurerm_network_security_group.myterraformnsg.id
+}
 
 # Generate random text for a unique storage account name
 resource "random_id" "randomId" {
@@ -120,19 +150,6 @@ resource "azurerm_storage_account" "mystorageaccount" {
 resource "tls_private_key" "example_ssh" {
   algorithm = "RSA"
   rsa_bits  = 4096
-}
-
-# Create network interface
-resource "azurerm_network_interface" "myterraformnic" {
-  name                = "myNIC"
-  location            = azurerm_resource_group.rg.location
-  resource_group_name = azurerm_resource_group.rg.name
-
-  ip_configuration {
-    name                          = "myNicConfiguration"
-    private_ip_address_allocation = "Dynamic"
-    subnet_id                     = azurerm_subnet.snet[element(keys(var.subnets), 1)].id
-  }
 }
 
 # Create virtual machine
@@ -167,5 +184,51 @@ resource "azurerm_linux_virtual_machine" "myterraformvm" {
 
   boot_diagnostics {
     storage_account_uri = azurerm_storage_account.mystorageaccount.primary_blob_endpoint
+  }
+}
+
+# Create resource group for sql server
+resource "azurerm_resource_group" "example" {
+  name     = "example-resources"
+  location = "East Asia"
+}
+
+
+# Create sql server
+resource "azurerm_mssql_server" "example" {
+  name                         = "a06sqlserver"
+  resource_group_name          = azurerm_resource_group.example.name
+  location                     = azurerm_resource_group.example.location
+  version                      = "12.0"
+  administrator_login          = "A06db"
+  administrator_login_password = "Mark199821!"
+
+  tags = {
+    environment = "production"
+  }
+}
+
+# Create storage_account for sql database
+resource "azurerm_storage_account" "example" {
+  name                     = "a06sqldatabase"
+  resource_group_name      = azurerm_resource_group.example.name
+  location                 = azurerm_resource_group.example.location
+  account_tier             = "Standard"
+  account_replication_type = "LRS"
+}
+
+# Create sql database
+resource "azurerm_mssql_database" "example" {
+  name           = "acctest-db-d"
+  server_id      = azurerm_mssql_server.example.id
+  collation      = "SQL_Latin1_General_CP1_CI_AS"
+  license_type   = "LicenseIncluded"
+  max_size_gb    = 2
+  read_scale     = false
+  sku_name       = "S0"
+  zone_redundant = false
+
+  tags = {
+    foo = "bar"
   }
 }

@@ -1,6 +1,5 @@
 module "azure" {
   source          = "./azure"
-  subscription_id = var.subscription_id
   appId           = var.appId
   password        = var.password
   location        = var.location
@@ -10,7 +9,6 @@ module "gcp" {
   source           = "./gcp"
   region           = var.region
   project_id       = var.project_id
-  credentials_path = "/gcp/a02-terraform-280561c9be83.json"
 }
 variable "subscription_id" {
   description = "Azure subscription id"
@@ -46,6 +44,14 @@ variable "region" {
 module "aws" {
     source           = "./aws"
     region           = var.region
-    access_key       = var.access_key
-    secret_key       = var.secret_key
+    AWS_ACCESS_KEY_ID = var.AWS_ACCESS_KEY_ID
+    AWS_SECRET_ACCESS_KEY = var.AWS_SECRET_ACCESS_KEY
+}
+
+variable "AWS_ACCESS_KEY_ID" {
+  description = "value of AWS_ACCESS_KEY_ID"
+}
+
+variable "AWS_SECRET_ACCESS_KEY" {
+  description = "value of AWS_SECRET_ACCESS_KEY"
 }

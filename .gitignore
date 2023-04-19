@@ -31,4 +31,4 @@ override.tf.json
 # Include tfplan files to ignore the plan output of command: terraform plan -out=tfplan
 # example: *tfplan*
 
-GCP\<service account access key>
+GCP\a02-terraform-280561c9be83.json
