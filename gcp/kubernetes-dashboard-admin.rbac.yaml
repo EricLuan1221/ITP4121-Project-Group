@@ -18,5 +18,5 @@ roleRef:
   name: cluster-admin
 subjects:
 - kind: ServiceAccount
-  name: admin-user
+  name: user
   namespace: kube-system
