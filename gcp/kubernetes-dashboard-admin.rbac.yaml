@@ -4,7 +4,7 @@
 apiVersion: v1
 kind: ServiceAccount
 metadata:
-  name: user
+  name: admin-user
   namespace: kube-system
 ---
 # Create ClusterRoleBinding
