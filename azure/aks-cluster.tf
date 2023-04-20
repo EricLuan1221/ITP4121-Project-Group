@@ -7,7 +7,7 @@ provider "azurerm" {
 resource "azurerm_resource_group" "default" {
   name     = "${random_pet.prefix.id}-rg"
   location = "East Asia"
-
+  prevent_deletion_if_contains_resources = false
   tags = {
     environment = "Demo"
   }
