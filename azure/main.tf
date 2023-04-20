@@ -196,11 +196,11 @@ resource "azurerm_resource_group" "example" {
 
 # Create sql server
 resource "azurerm_mssql_server" "example" {
-  name                         = "a06sqlserver"
+  name                         = "a02sqlserver"
   resource_group_name          = azurerm_resource_group.example.name
   location                     = azurerm_resource_group.example.location
   version                      = "12.0"
-  administrator_login          = "A06db"
+  administrator_login          = "A02db"
   administrator_login_password = "Mark199821!"
 
   tags = {
